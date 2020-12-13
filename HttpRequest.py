@@ -14,6 +14,9 @@ hostname = config['DEFAULT']['hostname']
 login = config['DEFAULT']['login']
 password = config['DEFAULT']['password']
 str_date = config['DEFAULT']['date']
+is_entity = bool(config['DEFAULT']['entity'])
+is_entity_route_sheet = bool(config['DEFAULT']['entity_route_sheet'])
+
 
 datefrom = dt.datetime.strptime(str_date, '%Y-%m-%d').date()
 date_to = dt.datetime.strptime(str_date, '%Y-%m-%d') + timedelta(days=1)-timedelta(seconds=1)
@@ -30,6 +33,8 @@ req = requests.Session()
 responce = req.post(hostname+'/action/login', data=auth_data)
 c = req.cookies
 h = req.headers
+
+
 
 responce = req.get(hostname+'/rest/collection/entity?order_by=id', cookies=c, headers=h)
 j = json.loads(responce.text)

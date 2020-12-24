@@ -43,16 +43,6 @@ part_filter_by_id = '{id eq %s}'
 filter_by_id = 'filter={%s}'
 filter_str = ''
 
-if is_entity:
-    responce = req.get(hostname+'/rest/collection/entity?order_by=id', cookies=c, headers=h)
-    j = json.loads(responce.text)
-    with open(path+'\entity.csv', 'w') as fout:
-        fout.write('id;identity;group;name;code\n')
-        if j['meta']['count'] != 0:
-            for item in j['entity']:
-                line = "%s;%s;%s;%s;%s\n" % (item['id'], item['identity'], item['group'], item['name'], item['code'])
-                fout.write(line)
-
 if is_entity_route_sheet_transaction:
     str_request = str()
     if str_date:
@@ -70,6 +60,8 @@ if is_entity_route_sheet_transaction:
                 fout.write(line)
                 filter_str = filter_str + ' or ' + part_filter_by_id % (item['entity_route_sheet_operation_id'])
 
+oper_filter_by_id = '['
+
 if is_entity_route_sheet_operation:
     str_request = hostname+'/rest/collection/entity_route_sheet_operation?order_by=id&'+filter_by_id % (filter_str[4:])
     # str_request = hostname+'/rest/collection/entity_route_sheet_operation?order_by=id'
@@ -84,13 +76,12 @@ if is_entity_route_sheet_operation:
                         item['stop_date'], item['progress'], item['department_id'], item['note'], item['calculation_session_id'],
                         item['start_date'], item['executor_id'], item['entity_route_sheet_id'], item['status'])
                 fout.write(line)
+                oper_filter_by_id = oper_filter_by_id + '%s,' % (item['entity_route_sheet_id'])
+            oper_filter_by_id = oper_filter_by_id[:len(oper_filter_by_id)-1] + ']'
 
+filter_by_id = 'filter={{id in %s}}'
 if is_entity_route_sheet:
-    str_request = str()
-    if str_date:
-        str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id&' + filter
-    else:
-        str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id'
+    str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id&' + filter_by_id % (oper_filter_by_id)
     responce = req.get(str_request, cookies=c, headers=h)
     j = json.loads(responce.text)
     with open(path+ '\entity_route_sheet.csv', 'w') as fout:
@@ -159,6 +150,16 @@ if is_user:
             for item in j['user']:
                 line = line = "%s;%s;%s;%s;%s;%s;%s\n" % (item['id'], item['disabled'], item['identity'], item['create_stamp'],
                                                           item['patronymic_name'], item['last_name'], item['name'])
+                fout.write(line)
+
+if is_entity:
+    responce = req.get(hostname+'/rest/collection/entity?order_by=id', cookies=c, headers=h)
+    j = json.loads(responce.text)
+    with open(path+'\entity.csv', 'w') as fout:
+        fout.write('id;identity;group;name;code\n')
+        if j['meta']['count'] != 0:
+            for item in j['entity']:
+                line = "%s;%s;%s;%s;%s\n" % (item['id'], item['identity'], item['group'], item['name'], item['code'])
                 fout.write(line)
 
 responce = req.get(hostname+'/action/logout', cookies=c, headers=h)

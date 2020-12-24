@@ -41,7 +41,7 @@ c = req.cookies
 h = req.headers
 part_filter_by_id = '{id eq %s}'
 filter_by_id = 'filter={%s}'
-
+filter_str = ''
 
 if is_entity:
     responce = req.get(hostname+'/rest/collection/entity?order_by=id', cookies=c, headers=h)
@@ -61,26 +61,20 @@ if is_entity_route_sheet_transaction:
         str_request = hostname + '/rest/collection/entity_route_sheet_transaction?order_by=id'
     responce = req.get(str_request, cookies=c, headers=h)
     j = json.loads(responce.text)
-    print(j)
     with open(path+ '\entity_route_sheet_transaction.csv', 'w') as fout:
-        tmp_str = ''
         fout.write('id;user_id;stop_progress;stop_date;start_date;entity_route_sheet_operation_id\n')
         if j['meta']['count'] != 0:
             for item in j['entity_route_sheet_transaction']:
                 line = "%s;%s;%s;%s;%s;%s\n" % (item['id'], item['user_id'], item['stop_progress'], item['stop_date'],
                                                 item['start_date'], item['entity_route_sheet_operation_id'])
                 fout.write(line)
-                tmp_str = tmp_str + ' or '+ part_filter_by_id % (item['entity_route_sheet_operation_id'])
-        print(tmp_str)
-        s = filter_by_id % (tmp_str[4:])
-        print(s)
+                filter_str = filter_str + ' or ' + part_filter_by_id % (item['entity_route_sheet_operation_id'])
 
 if is_entity_route_sheet_operation:
-    # str_request = hostname+'/rest/collection/entity_route_sheet_operation?order_by=id&'+filter_by_id % (tmp_str[4:])
-    str_request = hostname+'/rest/collection/entity_route_sheet_operation?order_by=id'
+    str_request = hostname+'/rest/collection/entity_route_sheet_operation?order_by=id&'+filter_by_id % (filter_str[4:])
+    # str_request = hostname+'/rest/collection/entity_route_sheet_operation?order_by=id'
     responce = req.get(str_request, cookies=c, headers=h)
     j = json.loads(responce.text)
-    print(j)
     with open(path+'\entity_route_sheet_operation.csv', 'w') as fout:
         fout.write('id;calculation_identity;operation_id;equipment_id;equipment_class_id;stop_date;progress;department_id;note;calculation_session_id;start_date;executor_id;entity_route_sheet_id;status\n')
         if j['meta']['count'] != 0:

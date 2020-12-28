@@ -13,6 +13,7 @@ hostname = config['DEFAULT']['hostname']
 login = config['DEFAULT']['login']
 password = config['DEFAULT']['password']
 str_date = config['DEFAULT']['date']
+input_file = config['DEFAULT']['inputfile']
 is_entity = bool(config['DEFAULT']['entity'])
 is_entity_route_sheet_transaction = bool(config['DEFAULT']['entity_route_sheet_transaction'])
 is_entity_route_sheet = bool(config['DEFAULT']['entity_route_sheet'])
@@ -42,6 +43,22 @@ h = req.headers
 part_filter_by_id = '{id eq %s}'
 filter_by_id = 'filter={%s}'
 filter_str = ''
+
+fout = open(input_file, 'r')
+st_list = fout.readlines()
+fout.close()
+
+filter_by_id = 'filter={{id in %s}}'
+if is_entity_route_sheet:
+    str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id'
+    responce = req.get(str_request, cookies=c, headers=h)
+    j = json.loads(responce.text)
+    with open(path+ '\entity_route_sheet.csv', 'w') as fout:
+        fout.write('id;desc;identity;entity_batch_id;stop_date;note;start_date;type\n')
+        if j['meta']['count'] != 0:
+            for item in j['entity_route_sheet']:
+                line = "%s;%s;%s;%s;%s;%s;%s;%s\n" % (item['id'], item['desc'],item['identity'], item['entity_batch_id'], item['stop_date'], item['note'], item['start_date'], item['type'])
+                fout.write(line)
 
 if is_entity_route_sheet_transaction:
     str_request = str()
@@ -78,18 +95,6 @@ if is_entity_route_sheet_operation:
                 fout.write(line)
                 oper_filter_by_id = oper_filter_by_id + '%s,' % (item['entity_route_sheet_id'])
             oper_filter_by_id = oper_filter_by_id[:len(oper_filter_by_id)-1] + ']'
-
-filter_by_id = 'filter={{id in %s}}'
-if is_entity_route_sheet:
-    str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id&' + filter_by_id % (oper_filter_by_id)
-    responce = req.get(str_request, cookies=c, headers=h)
-    j = json.loads(responce.text)
-    with open(path+ '\entity_route_sheet.csv', 'w') as fout:
-        fout.write('id;desc;identity;entity_batch_id;stop_date;note;start_date;type\n')
-        if j['meta']['count'] != 0:
-            for item in j['entity_route_sheet']:
-                line = "%s;%s;%s;%s;%s;%s;%s;%s\n" % (item['id'], item['desc'],item['identity'], item['entity_batch_id'], item['stop_date'], item['note'], item['start_date'], item['type'])
-                fout.write(line)
 
 if is_operation:
     responce = req.get(hostname+'/rest/collection/operation?order_by=id', cookies=c, headers=h)

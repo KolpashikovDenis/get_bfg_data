@@ -47,10 +47,17 @@ filter_str = ''
 fout = open(input_file, 'r')
 st_list = fout.readlines()
 fout.close()
+st_list = st_list[1:]
+filter_entity_route_sheet = "['"
+for line in st_list:
+    st = line.strip().split(';')
+    filter_entity_route_sheet =  filter_entity_route_sheet + st[1] + "','"
+filter_entity_route_sheet = filter_entity_route_sheet[:len(filter_entity_route_sheet)-1] + "']"
 
 filter_by_id = 'filter={{id in %s}}'
+filter_by_entity = 'filter={{identity in %s}}' % (filter_entity_route_sheet)
 if is_entity_route_sheet:
-    str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id'
+    str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id&'+filter_by_entity
     responce = req.get(str_request, cookies=c, headers=h)
     j = json.loads(responce.text)
     with open(path+ '\entity_route_sheet.csv', 'w') as fout:

@@ -13,6 +13,8 @@ hostname = config['DEFAULT']['hostname']
 login = config['DEFAULT']['login']
 password = config['DEFAULT']['password']
 str_date = config['DEFAULT']['date']
+str_start_date = config['DEFAULT']['startdate']
+str_end_date = config['DEFAULT']['enddate']
 input_file = config['DEFAULT']['inputfile']
 is_entity = bool(config['DEFAULT']['entity'])
 is_entity_route_sheet_transaction = bool(config['DEFAULT']['entity_route_sheet_transaction'])
@@ -29,6 +31,28 @@ if str_date:
     datefrom = dt.datetime.strptime(str_date, '%Y-%m-%d').date()
     date_to = dt.datetime.strptime(str_date, '%Y-%m-%d') + timedelta(days=1)-timedelta(seconds=1)
     filter = "filter={{start_date ge %s}}" % (datefrom.strftime('%Y-%m-%dT%H:%M:%S'))
+
+start_date = ""
+end_date = ""
+
+if str_start_date:
+    datefrom = dt.datetime.strptime(str_start_date, '%Y-%m-%d').date()
+    #date_to = dt.datetime.strptime(str_end_date, '%Y-%m-%d') + timedelta(days=1)-timedelta(seconds=1)
+    #filter = "filter={{start_date ge %s}}" % (datefrom.strftime('%Y-%m-%dT%H:%M:%S'))
+else:
+    datefrom = dt.datetime.now()
+
+start_date = "{start_date ge %s}" % (datefrom.strftime('%Y-%m-%dT%H:%M:%S'))
+
+if str_end_date:
+    date_to = dt.datetime.strptime(str_end_date, '%Y-%m-%d').date() + timedelta(days=1) - timedelta(seconds=1)
+else:
+    date_to = datefrom + timedelta(days=1) - timedelta(seconds=1)
+
+end_date = "{stop_date le %s}" % (date_to.strftime('%Y-%m-%dT%H:%M:%S'))
+
+filter = "filter={%s and %s}" % (start_date, end_date)
+
 
 path = os.path.abspath(os.path.dirname(sys.argv[0])) + '\\' + config['DEFAULT']['folder']
 if not os.path.exists(path):
@@ -63,7 +87,8 @@ for line in st_list:
 filter_entity_route_sheet = filter_entity_route_sheet[:len(filter_entity_route_sheet)-3] + '"]'
 
 if is_entity_route_sheet:
-    filter_by_entity = 'filter={{identity in %s}}' % (filter_entity_route_sheet)
+    filter_by_entity = 'filter={{identity in %s} and {%s} and {%s}}' % (filter_entity_route_sheet, start_date, end_date)
+    # filter_by_entity = 'filter={{identity in %s}}' % filter_entity_route_sheet
     str_request = hostname + '/rest/collection/entity_route_sheet?order_by=id&'+filter_by_entity
     responce = req.get(str_request, cookies=c, headers=h)
     j = json.loads(responce.text)

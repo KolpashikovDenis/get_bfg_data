@@ -13,6 +13,8 @@ hostname = config['DEFAULT']['hostname']
 login = config['DEFAULT']['login']
 password = config['DEFAULT']['password']
 str_date = config['DEFAULT']['date']
+str_start_date = config['DEFAULT']['startdate']
+str_end_date = config['DEFAULT']['enddate']
 is_entity = bool(config['DEFAULT']['entity'])
 is_entity_route_sheet_transaction = bool(config['DEFAULT']['entity_route_sheet_transaction'])
 is_entity_route_sheet = bool(config['DEFAULT']['entity_route_sheet'])
@@ -24,10 +26,24 @@ is_entity_batch = bool(config['DEFAULT']['entity_batch'])
 is_user = bool(config['DEFAULT']['user'])
 
 filter = str()
-if str_date:
-    datefrom = dt.datetime.strptime(str_date, '%Y-%m-%d').date()
-    date_to = dt.datetime.strptime(str_date, '%Y-%m-%d') + timedelta(days=1)-timedelta(seconds=1)
-    filter = "filter={{start_date ge %s}}" % (datefrom.strftime('%Y-%m-%dT%H:%M:%S'))
+start_date = ""
+end_date = ""
+
+if str_start_date:
+    datefrom = dt.datetime.strptime(str_start_date, '%Y-%m-%d').date()
+    #date_to = dt.datetime.strptime(str_end_date, '%Y-%m-%d') + timedelta(days=1)-timedelta(seconds=1)
+    #filter = "filter={{start_date ge %s}}" % (datefrom.strftime('%Y-%m-%dT%H:%M:%S'))
+else:
+    datefrom = dt.datetime.date()
+start_date = "{start_date ge %s}" % (datefrom.strftime('%Y-%m-%dT%H:%M:%S'))
+
+if str_end_date:
+    date_to = dt.datetime.strptime(str_end_date, '%Y-%m-%d') + timedelta(days=1) - timedelta(seconds=1)
+else:
+    date_to = dt.datetime.date() + timedelta(days=1) - timedelta(seconds=1)
+
+filter = "filter={{ start_date ge %s }} and {{ stop_date le % }}" % (datefrom.strftime('%Y-%m-%dT%H:%M:%S'), date_to.strftime('%Y-%m-%dT%H:%M:%S'))
+
 
 path = os.path.abspath(os.path.dirname(sys.argv[0])) + '\\' + config['DEFAULT']['folder']
 if not os.path.exists(path):
